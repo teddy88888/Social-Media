@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npx @tailwindcss/cli -i ./src/css/input.css -o ./src/css/output.css --content ./src/**/*.{js,ts,jsx,tsx} --watch",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
