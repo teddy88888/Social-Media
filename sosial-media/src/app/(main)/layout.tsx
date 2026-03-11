@@ -1,22 +1,14 @@
-"use client";
+import React from "react";
 
-import { BottomNav } from "@/components/bottom-nav";
-
+/**
+ * Layout ini membungkus semua halaman di dalam grup (main).
+ * Pastikan TIDAK menggunakan tag <form> sebagai pembungkus utama
+ * agar tidak terjadi refresh/reset otomatis pada halaman login atau feed.
+ */
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="flex flex-col min-h-screen bg-black">
-      {/* Area Konten Utama */}
-      <main className="flex-1 pb-20">
-        {/* pb-20 agar konten tidak tertutup oleh BottomNav */}
-        {children}
-      </main>
-
-      {/* Navigasi Bawah yang Menempel */}
-      <BottomNav />
-    </div>
-  );
+  return <div className="min-h-screen">{children}</div>;
 }

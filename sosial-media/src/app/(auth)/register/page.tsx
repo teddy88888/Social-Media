@@ -12,6 +12,8 @@ import { useState } from "react";
 export default function RegisterPage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
 
   const {
     register,
@@ -21,19 +23,36 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegisterInput) => {
-    try {
-      setServerError(null);
-      // Hapus confirmPassword sebelum kirim ke API
-      const { confirmPassword, ...payload } = data;
-      await api.post("/api/auth/register", payload);
+  const onSubmit = async (data: any) => {
+    setServerError(null);
+    setIsLoading(true);
 
-      // Jika berhasil, arahkan ke login
-      router.push("/login");
+    try {
+      // API ini biasanya mewajibkan field 'name'
+      const payload = {
+        name: data.username, // Gunakan username sebagai nama sementara
+        username: data.username,
+        email: data.email,
+        password: data.password,
+      };
+
+      console.log("Mengirim data:", payload);
+
+      // Pastikan path-nya benar sesuai proxy: /auth/register
+      const response = await api.post("/auth/register", payload);
+
+      // Sesuaikan pengecekan sukses
+      if (response.data.success || response.status === 201) {
+        alert("Registrasi Berhasil!");
+        router.push("/login");
+      }
     } catch (err: any) {
-      setServerError(
-        err.response?.data?.message || "Registration failed. Try again.",
-      );
+      // CARA LIHAT ERROR: Klik tanda > di sebelah 'Detail Error dari Server' di Konsol
+      const msg = err.response?.data?.message || "Validation failed";
+      setServerError(msg);
+      console.log("Detail Error dari Server:", err.response?.data);
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -1,113 +1,79 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, LoginInput } from "@/lib/validations/auth";
-import api from "@/lib/axios";
-import { useAppDispatch } from "@/lib/store/hooks";
-import { setCredentials } from "@/lib/store/authSlice";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import api from "@/lib/axios";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const dispatch = useAppDispatch();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
-  const [serverError, setServerError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmit = async (data: LoginInput) => {
+  const handleLogin = async () => {
+    setIsLoading(true);
     try {
-      setServerError(null);
-      const response = await api.post("/api/auth/login", data);
+      const res = await api.post("/auth/login", { email, password });
 
-      // Simpan user & token ke Redux (Store & LocalStorage)
-      dispatch(
-        setCredentials({
-          user: response.data.user,
-          token: response.data.token,
-        }),
-      );
-
-      // Arahkan ke Feed
-      router.push("/feed");
+      if (res.data.success) {        
+        localStorage.setItem("token", res.data.data.token);
+        window.location.href = "/feed";
+      }
     } catch (err: any) {
-      setServerError(
-        err.response?.data?.message ||
-          "Login failed. Please check your credentials.",
-      );
+      // Alert ini akan muncul jika ada masalah jaringan atau salah password
+      const pesanError =
+        err.response?.data?.message || "Koneksi ke server gagal/lambat";
+      alert("Error: " + pesanError);
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-6">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            Welcome Back
-          </h1>
-          <p className="text-zinc-400 mt-2 text-sm">
-            Please enter your details
-          </p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-black text-white p-4">
+      <h1 className="text-2xl font-bold mb-6">Login</h1>
+
+      <div className="w-full max-w-sm flex flex-col gap-4">
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="p-3 rounded bg-zinc-900 border border-zinc-800 text-white outline-none"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="p-3 rounded bg-zinc-900 border border-zinc-800 text-white outline-none"
+        />
+
+        {error && <p className="text-red-500 text-sm font-bold">{error}</p>}
+
+        <div
+          role="button"
+          onClick={() => {
+            console.log("Mencoba Login..."); // Cek apakah ini muncul di console
+            if (!isLoading) handleLogin();
+          }}
+          style={{
+            display: "block",
+            textAlign: "center",
+            padding: "12px",
+            backgroundColor: "#4f46e5",
+            color: "white",
+            borderRadius: "8px",
+            fontWeight: "bold",
+            cursor: isLoading ? "not-allowed" : "pointer",
+            marginTop: "10px",
+            userSelect: "none",
+          }}
+        >
+          {isLoading ? "Memproses..." : "Login Sekarang"}
         </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Input
-              {...register("email")}
-              type="email"
-              placeholder="Email"
-              className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-500 h-12"
-            />
-            {errors.email && (
-              <p className="text-red-500 text-xs">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Input
-              {...register("password")}
-              type="password"
-              placeholder="Password"
-              className="bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-500 h-12"
-            />
-            {errors.password && (
-              <p className="text-red-500 text-xs">{errors.password.message}</p>
-            )}
-          </div>
-
-          {serverError && (
-            <p className="text-red-500 text-center text-sm bg-red-500/10 py-2 rounded-md border border-red-500/20">
-              {serverError}
-            </p>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold h-12"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Signing in..." : "Login"}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-zinc-400">
-          Don't have an account?{" "}
-          <button
-            onClick={() => router.push("/register")}
-            className="text-indigo-400 font-medium hover:underline"
-          >
-            Sign Up
-          </button>
-        </p>
       </div>
     </div>
   );

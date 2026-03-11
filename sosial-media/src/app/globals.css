@@ -116,21 +116,10 @@
 }
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    /* ... rest of variables */
+  * {
+    @apply border-border;
   }
-
-  .dark {
-    --background: 240 10% 3.9%; /* Ini akan jadi hitam pekat */
-    --foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-  }
-
   body {
-    @apply bg-black text-white;
+    @apply bg-background text-foreground;
   }
 }
